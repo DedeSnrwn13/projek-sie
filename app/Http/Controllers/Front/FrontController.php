@@ -21,4 +21,9 @@ class FrontController extends Controller
     {
         return view('destination');
     }
+
+    public function hotel()
+    {
+        return view('hotel');
+    }
 }
