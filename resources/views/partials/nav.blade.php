@@ -12,7 +12,7 @@
                 <li class="nav-item @if (url()->current() == route('destination')) active @endif"><a href="{{ route('destination') }}" class="nav-link">Destination</a></li>
                 <li class="nav-item @if (url()->current() == route('hotel')) active @endif"><a href="{{ route('hotel') }}" class="nav-link">Hotel</a></li>
                 <li class="nav-item @if (url()->current() == route('blog')) active @endif"><a href="{{ route('blog') }}" class="nav-link">Blog</a></li>
-                <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
+                <li class="nav-item @if (url()->current() == route('contact')) active @endif"><a href="{{ route('contact') }}" class="nav-link">Contact</a></li>
             </ul>
         </div>
     </div>

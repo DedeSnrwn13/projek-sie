@@ -19,3 +19,4 @@ Route::get('/about', [FrontController::class, 'about'])->name('about');
 Route::get('/destination', [FrontController::class, 'destination'])->name('destination');
 Route::get('/hotel', [FrontController::class, 'hotel'])->name('hotel');
 Route::get('/blog', [FrontController::class, 'blog'])->name('blog');
+Route::get('/contact', [FrontController::class, 'contact'])->name('contact');
