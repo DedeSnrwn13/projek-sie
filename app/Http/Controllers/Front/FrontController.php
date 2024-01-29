@@ -3,18 +3,17 @@
 namespace App\Http\Controllers\Front;
 
 use App\Http\Controllers\Controller;
+use App\Models\Banner;
 use Illuminate\Http\Request;
 
 class FrontController extends Controller
 {
     public function index()
     {
-        return view('welcome');
-    }
+        $heroBanner = Banner::where('type', 'hero')->first();
+        $footerBanner = Banner::where('type', 'footer')->first();
 
-    public function about()
-    {
-        return view('about');
+        return view('welcome', compact('heroBanner', 'footerBanner'));
     }
 
     public function destination()

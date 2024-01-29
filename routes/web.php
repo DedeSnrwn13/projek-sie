@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [FrontController::class, 'index'])->name('welcome');
-Route::get('/about', [FrontController::class, 'about'])->name('about');
 Route::get('/destination', [FrontController::class, 'destination'])->name('destination');
 Route::get('/hotel', [FrontController::class, 'hotel'])->name('hotel');
 Route::get('/blog', [FrontController::class, 'blog'])->name('blog');
