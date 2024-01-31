@@ -5,31 +5,40 @@ namespace App\Filament\Resources;
 use stdClass;
 use Filament\Forms;
 use Filament\Tables;
-use App\Models\Banner;
+use App\Models\Article;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use App\Models\Category;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\BannerResource\Pages;
+use App\Filament\Resources\ArticleResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\BannerResource\RelationManagers;
+use App\Filament\Resources\ArticleResource\RelationManagers;
+use Filament\Tables\Columns\ImageColumn;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
-class BannerResource extends Resource
+class ArticleResource extends Resource
 {
-    protected static ?string $model = Banner::class;
+    protected static ?string $model = Article::class;
 
-    protected static ?string $navigationGroup = 'Manage Banner';
+    protected static ?string $navigationGroup = 'Manage Post';
 
-    protected static ?string $navigationIcon = 'heroicon-o-photo';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $navigationLabel = 'Banner';
+    protected static ?string $navigationLabel = 'Blog';
 
     protected static ?int $navigationSort = 1;
 
@@ -40,33 +49,36 @@ class BannerResource extends Resource
                 Section::make()
                 ->schema([
                     TextInput::make('title')
-                        ->nullable()
-                        ->string(),
-                    TextInput::make('subtitle')
-                        ->nullable()
-                        ->string(),
-                    TextInput::make('description')
-                        ->nullable()
-                        ->string(),
-                    TextInput::make('video_link')
-                        ->url()
+                        ->string()
+                        ->live()
+                        ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
+                            if (($get('slug') ?? '') !== Str::slug($old)) {
+                                return;
+                            }
+
+                            $set('slug', Str::slug($state));
+                        })
                         ->required(),
-                    Select::make('type')
-                        ->helperText('Position')
-                        ->options([
-                            'hero' => 'Hero Section',
-                            'footer' => 'Footer Section'
-                        ])
+                    TextInput::make('slug')
+                        ->string()
                         ->required(),
+                    Select::make('category_id')
+                        ->label('Category')
+                        ->options(Category::pluck('name', 'id'))
+                        ->required(),
+                    Toggle::make('is_active')
+                        ->onColor('success')
+                        ->offColor('danger')
+                        ->inline(false),
                     FileUpload::make('image')
                         ->required()
                         ->image()
                         ->visibility('public')
                         ->imageEditor()
-                        ->directory('banners')
+                        ->directory('blogs')
                         ->getUploadedFileNameForStorageUsing(
                             fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
-                                ->prepend('banner-'),
+                                ->prepend('blog-'),
                         )
                         ->imagePreviewHeight('250')
                         ->loadingIndicatorPosition('left')
@@ -76,7 +88,12 @@ class BannerResource extends Resource
                         ->uploadButtonPosition('left')
                         ->uploadProgressIndicatorPosition('left')
                 ])
-                ->columns(2)
+                ->columns(2),
+                Section::make()
+                ->schema([
+                    RichEditor::make('body')
+                        ->required()
+                ])
             ]);
     }
 
@@ -96,37 +113,31 @@ class BannerResource extends Resource
                         );
                     }
                 ),
+                ImageColumn::make('image')
+                    ->square(),
                 TextColumn::make('title')
-                    ->limit(20)
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('subtitle')
-                    ->limit(20)
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('description')
-                    ->limit(20)
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('type')
-                    ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
+                ToggleColumn::make('is_active')
+                    ->disabled(),
+                TextColumn::make('category.name'),
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->sortable()
                     ->searchable()
-                    ->sortable(),
+                    ->dateTime(),
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->sortable()
                     ->searchable()
-                    ->sortable(),
+                    ->dateTime(),
             ])
             ->filters([
-                //
+                SelectFilter::make('category')->relationship('category', 'name')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -145,9 +156,9 @@ class BannerResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListBanners::route('/'),
-            'create' => Pages\CreateBanner::route('/create'),
-            'edit' => Pages\EditBanner::route('/{record}/edit'),
+            'index' => Pages\ListArticles::route('/'),
+            'create' => Pages\CreateArticle::route('/create'),
+            'edit' => Pages\EditArticle::route('/{record}/edit'),
         ];
     }
 }

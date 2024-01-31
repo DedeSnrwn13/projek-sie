@@ -5,9 +5,10 @@ namespace App\Filament\Resources;
 use stdClass;
 use Filament\Forms;
 use Filament\Tables;
-use App\Models\Banner;
+use App\Models\District;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\Destination;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
@@ -16,22 +17,23 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\FileUpload;
 use Illuminate\Database\Eloquent\Builder;
-use App\Filament\Resources\BannerResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\BannerResource\RelationManagers;
+use App\Filament\Resources\DestinationResource\Pages;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use App\Filament\Resources\DestinationResource\RelationManagers;
+use App\Models\Category;
+use Filament\Tables\Columns\ImageColumn;
+use Nette\Utils\ImageColor;
 
-class BannerResource extends Resource
+class DestinationResource extends Resource
 {
-    protected static ?string $model = Banner::class;
+    protected static ?string $model = Destination::class;
 
-    protected static ?string $navigationGroup = 'Manage Banner';
+    protected static ?string $navigationGroup = 'Manage Destination';
 
-    protected static ?string $navigationIcon = 'heroicon-o-photo';
+    protected static ?string $navigationIcon = 'heroicon-o-globe-asia-australia';
 
-    protected static ?string $navigationLabel = 'Banner';
-
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationLabel = 'Destination';
 
     public static function form(Form $form): Form
     {
@@ -39,34 +41,34 @@ class BannerResource extends Resource
             ->schema([
                 Section::make()
                 ->schema([
-                    TextInput::make('title')
-                        ->nullable()
-                        ->string(),
-                    TextInput::make('subtitle')
-                        ->nullable()
-                        ->string(),
-                    TextInput::make('description')
-                        ->nullable()
-                        ->string(),
-                    TextInput::make('video_link')
-                        ->url()
+                    TextInput::make('name')
+                        ->string()
                         ->required(),
-                    Select::make('type')
-                        ->helperText('Position')
-                        ->options([
-                            'hero' => 'Hero Section',
-                            'footer' => 'Footer Section'
-                        ])
+                    Select::make('district_id')
+                        ->label('District')
+                        ->options(District::pluck('name', 'id'))
+                        ->searchable()
                         ->required(),
-                    FileUpload::make('image')
+                    TextInput::make('address')
+                        ->string()
+                        ->required(),
+                    TextInput::make('village')
+                        ->string()
+                        ->required(),
+                    Select::make('category_id')
+                        ->label('Category')
+                        ->options(Category::pluck('name', 'id'))
+                        ->searchable()
+                        ->required(),
+                    FileUpload::make('thumbnail')
                         ->required()
                         ->image()
                         ->visibility('public')
                         ->imageEditor()
-                        ->directory('banners')
+                        ->directory('destinations')
                         ->getUploadedFileNameForStorageUsing(
                             fn (TemporaryUploadedFile $file): string => (string) str($file->getClientOriginalName())
-                                ->prepend('banner-'),
+                                ->prepend('destination-'),
                         )
                         ->imagePreviewHeight('250')
                         ->loadingIndicatorPosition('left')
@@ -75,6 +77,7 @@ class BannerResource extends Resource
                         ->removeUploadedFileButtonPosition('right')
                         ->uploadButtonPosition('left')
                         ->uploadProgressIndicatorPosition('left')
+
                 ])
                 ->columns(2)
             ]);
@@ -96,19 +99,18 @@ class BannerResource extends Resource
                         );
                     }
                 ),
-                TextColumn::make('title')
-                    ->limit(20)
+                ImageColumn::make('thumbnail')
+                    ->square(),
+                TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('subtitle')
-                    ->limit(20)
+                TextColumn::make('address')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('description')
-                    ->limit(20)
+                TextColumn::make('village')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('type')
+                TextColumn::make('district.name')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('created_at')
@@ -124,7 +126,6 @@ class BannerResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
             ])
@@ -145,9 +146,9 @@ class BannerResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListBanners::route('/'),
-            'create' => Pages\CreateBanner::route('/create'),
-            'edit' => Pages\EditBanner::route('/{record}/edit'),
+            'index' => Pages\ListDestinations::route('/'),
+            'create' => Pages\CreateDestination::route('/create'),
+            'edit' => Pages\EditDestination::route('/{record}/edit'),
         ];
     }
 }
